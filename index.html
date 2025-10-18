@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MAVU Estate Analyzer</title>
+    <link rel="stylesheet" href="css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <!-- Property24 API Integration - Using mock data approach -->
+    <script>
+        // Mock Property24 API for frontend integration
+        window.Property24API = {
+            searchProperties: async function(params) {
+                // Mock Property24 data for South African properties
+                const mockProperties = [
+                    {
+                        id: 1,
+                        address: "123 Oak Street, " + params.location,
+                        title: "Modern Family Home",
+                        bedrooms: params.bedrooms || 3,
+                        bathrooms: params.bathrooms || 2,
+                        size: params.minPrice ? Math.round(params.minPrice / 4500) : 1500,
+                        price: params.minPrice || 6750000,
+                        images: ["https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop"],
+                        dateListed: "2024-01-15",
+                        url: "https://www.property24.com/listing/123"
+                    },
+                    {
+                        id: 2,
+                        address: "456 Pine Avenue, " + params.location,
+                        title: "Luxury Villa",
+                        bedrooms: (params.bedrooms || 3) + 1,
+                        bathrooms: (params.bathrooms || 2) + 0.5,
+                        size: params.minPrice ? Math.round(params.minPrice / 4000) : 1800,
+                        price: params.maxPrice || 8500000,
+                        images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop"],
+                        dateListed: "2024-01-10",
+                        url: "https://www.property24.com/listing/456"
+                    },
+                    {
+                        id: 3,
+                        address: "789 Maple Road, " + params.location,
+                        title: "Contemporary House",
+                        bedrooms: params.bedrooms || 3,
+                        bathrooms: params.bathrooms || 2,
+                        size: params.minPrice ? Math.round(params.minPrice / 4200) : 1600,
+                        price: Math.round((params.minPrice + params.maxPrice) / 2) || 7500000,
+                        images: ["https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop"],
+                        dateListed: "2024-01-20",
+                        url: "https://www.property24.com/listing/789"
+                    }
+                ];
+                
+                // Filter based on parameters
+                let filteredProperties = mockProperties;
+                
+                if (params.bedrooms) {
+                    filteredProperties = filteredProperties.filter(p => p.bedrooms === params.bedrooms);
+                }
+                if (params.bathrooms) {
+                    filteredProperties = filteredProperties.filter(p => p.bathrooms === params.bathrooms);
+                }
+                if (params.minPrice) {
+                    filteredProperties = filteredProperties.filter(p => p.price >= params.minPrice);
+                }
+                if (params.maxPrice) {
+                    filteredProperties = filteredProperties.filter(p => p.price <= params.maxPrice);
+                }
+                
+                return filteredProperties.slice(0, params.limit || 5);
+            }
+        };
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <div class="logo">
+                <i class="fas fa-home"></i>
+                <h1>MAVU Estate Analyzer</h1>
+            </div>
+            <p class="subtitle">Data-driven property price predictions in South African Rands</p>
+            <div id="apiStatus" class="api-status loading">Connecting to Property24...</div>
+        </header>
+
+        <main class="main-content">
+            <div class="input-section">
+                <h2><i class="fas fa-calculator"></i> Property Details</h2>
+                <form id="propertyForm" class="property-form">
+                    <div class="form-grid">
+                        <div class="form-group">
+                            <label for="location">Location (City, Province)</label>
+                            <select id="location" name="location" required>
+                                <option value="">Select Location</option>
+                                <option value="Sandton, Johannesburg">Sandton, Johannesburg</option>
+                                <option value="Cape Town, Western Cape">Cape Town, Western Cape</option>
+                                <option value="Durban, KwaZulu-Natal">Durban, KwaZulu-Natal</option>
+                                <option value="Pretoria, Gauteng">Pretoria, Gauteng</option>
+                                <option value="Port Elizabeth, Eastern Cape">Port Elizabeth, Eastern Cape</option>
+                                <option value="Bloemfontein, Free State">Bloemfontein, Free State</option>
+                            </select>
+                        </div>
+                        
+                        <div class="form-group">
+                            <label for="bedrooms">Bedrooms</label>
+                            <select id="bedrooms" name="bedrooms" required>
+                                <option value="">Select</option>
+                                <option value="1">1</option>
+                                <option value="2">2</option>
+                                <option value="3">3</option>
+                                <option value="4">4</option>
+                                <option value="5">5+</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="bathrooms">Bathrooms</label>
+                            <select id="bathrooms" name="bathrooms" required>
+                                <option value="">Select</option>
+                                <option value="1">1</option>
+                                <option value="1.5">1.5</option>
+                                <option value="2">2</option>
+                                <option value="2.5">2.5</option>
+                                <option value="3">3</option>
+                                <option value="3.5">3.5</option>
+                                <option value="4">4+</option>
+                            </select>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="sqft">Square Footage</label>
+                            <input type="number" id="sqft" name="sqft" placeholder="e.g., 1800" required>
+                        </div>
+
+                        <div class="form-group">
+                            <label for="yearBuilt">Year Built</label>
+                            <input type="number" id="yearBuilt" name="yearBuilt" placeholder="e.g., 2010" min="1900" max="2024">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="lotSize">Lot Size (acres)</label>
+                            <input type="number" id="lotSize" name="lotSize" placeholder="e.g., 0.25" step="0.01" min="0">
+                        </div>
+                    </div>
+
+                    <div class="amenities-section">
+                        <h3>Amenities</h3>
+                        <div class="amenities-grid">
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="garage" value="true">
+                                <span class="checkmark"></span>
+                                Garage
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="pool" value="true">
+                                <span class="checkmark"></span>
+                                Pool
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="fireplace" value="true">
+                                <span class="checkmark"></span>
+                                Fireplace
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="basement" value="true">
+                                <span class="checkmark"></span>
+                                Basement
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="centralAC" value="true">
+                                <span class="checkmark"></span>
+                                Central A/C
+                            </label>
+                            <label class="checkbox-label">
+                                <input type="checkbox" name="hardwoodFloors" value="true">
+                                <span class="checkmark"></span>
+                                Hardwood Floors
+                            </label>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="analyze-btn">
+                        <i class="fas fa-search"></i>
+                        Analyze Property
+                    </button>
+                </form>
+            </div>
+
+            <div class="results-section" id="resultsSection" style="display: none;">
+                <h2><i class="fas fa-chart-line"></i> Price Analysis</h2>
+                
+                <div class="price-display">
+                    <div class="price-range">
+                        <span class="price-label">Estimated Price Range</span>
+                        <span class="price-value" id="priceRange">R 8,500,000 - R 9,200,000</span>
+                    </div>
+                    <div class="confidence-meter">
+                        <span class="confidence-label">Confidence Level</span>
+                        <div class="confidence-bar">
+                            <div class="confidence-fill" id="confidenceFill"></div>
+                        </div>
+                        <span class="confidence-text" id="confidenceText">85%</span>
+                    </div>
+                </div>
+
+                <div class="analysis-grid">
+                    <div class="analysis-card">
+                        <h3><i class="fas fa-chart-bar"></i> Key Influencers</h3>
+                        <ul id="keyInfluencers" class="influencers-list">
+                            <li><span class="factor">School District Quality:</span> <span class="impact positive">+8%</span></li>
+                            <li><span class="factor">Low Crime Rate:</span> <span class="impact positive">+5%</span></li>
+                            <li><span class="factor">Market Demand:</span> <span class="impact positive">+12%</span></li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-card">
+                        <h3><i class="fas fa-home"></i> Recent Comparables</h3>
+                        <div id="comparables" class="comparables-list">
+                            <div class="comparable-item">
+                                <span class="address">123 Oak St, Sandton, Johannesburg</span>
+                                <span class="details">3 bed, 2 bath, 1,750 sqft</span>
+                                <span class="price">R 8,750,000</span>
+                                <span class="date">Sold 2 weeks ago</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-card">
+                        <h3><i class="fas fa-lightbulb"></i> Value Enhancement Tips</h3>
+                        <ul id="enhancementTips" class="tips-list">
+                            <li>Adding a patio could boost value by ~5%</li>
+                            <li>Kitchen renovation: potential 10-15% increase</li>
+                            <li>Energy-efficient upgrades: 3-7% premium</li>
+                        </ul>
+                    </div>
+
+                    <div class="analysis-card">
+                        <h3><i class="fas fa-info-circle"></i> Market Insights</h3>
+                        <div id="marketInsights" class="insights-list">
+                            <div class="insight-item">
+                                <span class="metric">Days on Market:</span>
+                                <span class="value">15 days (avg)</span>
+                            </div>
+                            <div class="insight-item">
+                                <span class="metric">Price per sqft:</span>
+                                <span class="value">R 4,850</span>
+                            </div>
+                            <div class="insight-item">
+                                <span class="metric">Market Trend:</span>
+                                <span class="value trend-up">+2.3% (3 months)</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-card property-images-card">
+                        <h3><i class="fas fa-images"></i> Property Images</h3>
+                        <div id="propertyImages" class="property-images">
+                            <div class="image-placeholder">
+                                <i class="fas fa-home"></i>
+                                <p>Property images will be displayed here</p>
+                                <small>Based on your property specifications</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="analysis-card map-card">
+                        <h3><i class="fas fa-map-marker-alt"></i> Location Map</h3>
+                        <div id="locationMap" class="location-map">
+                            <div class="map-placeholder">
+                                <i class="fas fa-map"></i>
+                                <p>Interactive map will be displayed here</p>
+                                <small>Showing the selected city area</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="disclaimer">
+                    <h3><i class="fas fa-exclamation-triangle"></i> Important Disclaimers</h3>
+                    <ul>
+                        <li>This estimate is based on historical data and market trends, not real-time pricing</li>
+                        <li>Actual prices may vary significantly due to market fluctuations, property condition, and negotiation</li>
+                        <li>We recommend consulting with a licensed real estate professional for precise valuations</li>
+                        <li>This analysis is for informational purposes only and should not be considered as professional advice</li>
+                    </ul>
+                </div>
+
+                <button class="new-analysis-btn" onclick="resetForm()">
+                    <i class="fas fa-plus"></i>
+                    Analyze Another Property
+                </button>
+            </div>
+        </main>
+
+        <footer class="footer">
+            <p>&copy; 2024 MAVU Estate Analyzer. Contact us today for a better quote.</p>
+        </footer>
+    </div>
+
+    <script src="js/analyzer.js"></script>
+</body>
+</html> 
