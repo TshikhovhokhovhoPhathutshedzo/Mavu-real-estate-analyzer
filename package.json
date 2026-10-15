@@ -1,25 +1,21 @@
 {
   "name": "real-estate-analyzer",
   "version": "1.0.0",
-  "description": "A real estate price prediction system for South African properties using Property24 API",
+  "description": "A demonstration property price estimator for South African properties using simulated market data",
   "main": "js/analyzer.js",
   "scripts": {
-    "start": "npx http-server . -p 3000",
-    "dev": "npx live-server . --port=3000"
-  },
-  "dependencies": {
-    "@geimaj/zaio-property24-api": "^0.0.3"
+    "start": "http-server . -p 3000 -c-1",
+    "dev": "http-server . -p 3000 -c-1"
   },
   "devDependencies": {
-    "http-server": "^14.1.1",
-    "live-server": "^1.2.2"
+    "http-server": "^14.1.1"
   },
   "keywords": [
     "real-estate",
     "property",
     "south-africa",
-    "property24",
-    "price-prediction"
+    "price-prediction",
+    "simulated-market-data"
   ],
   "author": "MAVU Estate Analyzer",
   "license": "MIT"

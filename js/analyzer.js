@@ -1,17 +1,18 @@
-// Real Estate Price Prediction System with Property24 API Integration
+// Real Estate Price Estimator using simulated market data
 class RealEstateAnalyzer {
     constructor() {
         this.form = document.getElementById('propertyForm');
         this.resultsSection = document.getElementById('resultsSection');
         this.analyzeBtn = document.querySelector('.analyze-btn');
+        this.currentYear = new Date().getFullYear();
+        this.form.querySelector('#yearBuilt').max = String(this.currentYear);
+        document.getElementById('currentYear').textContent = String(this.currentYear);
         
-        // Property24 API configuration
-        this.property24Api = null;
-        this.apiKey = null; // Will be set when API is available
+        this.marketDataProvider = null;
         
         this.initializeEventListeners();
         this.loadMarketData();
-        this.initializeProperty24API();
+        this.initializeMarketDataProvider();
     }
 
     initializeEventListeners() {
@@ -24,22 +25,21 @@ class RealEstateAnalyzer {
         this.form.addEventListener('input', () => {
             this.validateForm();
         });
+
+        this.form.addEventListener('change', () => {
+            this.validateForm();
+        });
+
+        this.validateForm(false);
     }
 
-    async initializeProperty24API() {
+    async initializeMarketDataProvider() {
         try {
-            // Initialize Property24 API when available
-            if (typeof Property24API !== 'undefined') {
-                this.property24Api = Property24API;
-                console.log('Property24 API initialized successfully');
-                this.updateAPIStatus('connected', 'Property24 Connected');
-            } else {
-                console.log('Property24 API not available, using fallback data');
-                this.updateAPIStatus('disconnected', 'Property24 Unavailable');
-            }
+            this.marketDataProvider = window.DemoMarketData || null;
+            this.updateAPIStatus('demo', 'Demo data only');
         } catch (error) {
-            console.warn('Property24 API initialization failed:', error);
-            this.updateAPIStatus('disconnected', 'Property24 Error');
+            console.warn('Demo market data initialization failed:', error);
+            this.updateAPIStatus('demo', 'Demo data only');
         }
     }
 
@@ -51,8 +51,8 @@ class RealEstateAnalyzer {
         }
     }
 
-    async fetchProperty24Data(location, propertyType = 'house') {
-        if (!this.property24Api) {
+    async fetchMarketListings(location, propertyType = 'house') {
+        if (!this.marketDataProvider) {
             return null;
         }
 
@@ -66,16 +66,16 @@ class RealEstateAnalyzer {
                 order: 'asc'
             };
 
-            const results = await this.property24Api.searchProperties(searchParams);
+            const results = await this.marketDataProvider.searchProperties(searchParams);
             return results;
         } catch (error) {
-            console.error('Error fetching Property24 data:', error);
+            console.error('Error loading demo market listings:', error);
             return null;
         }
     }
 
     async getPropertyComparables(location, bedrooms, bathrooms, sqft) {
-        if (!this.property24Api) {
+        if (!this.marketDataProvider) {
             return this.generateFallbackComparables(location, bedrooms, bathrooms, sqft);
         }
 
@@ -89,15 +89,15 @@ class RealEstateAnalyzer {
                 limit: 5
             };
 
-            const comparables = await this.property24Api.searchProperties(searchParams);
-            return this.formatProperty24Comparables(comparables);
+            const comparables = await this.marketDataProvider.searchProperties(searchParams);
+            return this.formatComparables(comparables);
         } catch (error) {
-            console.error('Error fetching comparables from Property24:', error);
+            console.error('Error loading demo comparables:', error);
             return this.generateFallbackComparables(location, bedrooms, bathrooms, sqft);
         }
     }
 
-    formatProperty24Comparables(properties) {
+    formatComparables(properties) {
         return properties.map(property => ({
             address: property.address || property.title,
             details: `${property.bedrooms || 'N/A'} bed, ${property.bathrooms || 'N/A'} bath, ${property.size || 'N/A'} sqft`,
@@ -114,7 +114,7 @@ class RealEstateAnalyzer {
                 address: this.generateAddress(location),
                 details: `${bedrooms} bed, ${bathrooms} bath, ${Math.round(sqft * 0.95)} sqft`,
                 price: `R ${Math.round(sqft * 4500).toLocaleString()}`,
-                date: 'Sold 2 weeks ago',
+                date: 'Demo comparable',
                 url: '#',
                 image: null
             },
@@ -122,7 +122,7 @@ class RealEstateAnalyzer {
                 address: this.generateAddress(location),
                 details: `${bedrooms} bed, ${bathrooms} bath, ${Math.round(sqft * 1.05)} sqft`,
                 price: `R ${Math.round(sqft * 4800).toLocaleString()}`,
-                date: 'Sold 1 month ago',
+                date: 'Demo comparable',
                 url: '#',
                 image: null
             },
@@ -130,7 +130,7 @@ class RealEstateAnalyzer {
                 address: this.generateAddress(location),
                 details: `${bedrooms} bed, ${bathrooms} bath, ${sqft} sqft`,
                 price: `R ${Math.round(sqft * 5200).toLocaleString()}`,
-                date: 'Sold 3 weeks ago',
+                date: 'Demo comparable',
                 url: '#',
                 image: null
             }
@@ -221,22 +221,33 @@ class RealEstateAnalyzer {
         };
     }
 
-    validateForm() {
-        const requiredFields = ['location', 'bedrooms', 'bathrooms', 'sqft'];
-        let isValid = true;
+    validateForm(showFeedback = true) {
+        const invalidField = this.form.querySelector(':invalid');
+        const isValid = !invalidField;
+        const feedback = document.getElementById('formFeedback');
 
-        requiredFields.forEach(field => {
-            const element = document.getElementById(field);
-            if (!element.value.trim()) {
-                element.style.borderColor = '#dc3545';
-                isValid = false;
-            } else {
-                element.style.borderColor = '#e9ecef';
-            }
+        this.form.querySelectorAll('.form-group input, .form-group select').forEach(element => {
+            element.style.borderColor = element.value && !element.validity.valid ? '#dc3545' : '#e9ecef';
         });
 
         this.analyzeBtn.disabled = !isValid;
         this.analyzeBtn.style.opacity = isValid ? '1' : '0.6';
+        if (feedback) {
+            feedback.textContent = showFeedback && invalidField ? this.getValidationMessage(invalidField) : '';
+        }
+        return isValid;
+    }
+
+    getValidationMessage(field) {
+        const messages = {
+            location: 'Select a location to continue.',
+            bedrooms: 'Select the number of bedrooms.',
+            bathrooms: 'Select the number of bathrooms.',
+            sqft: 'Enter a floor area between 1 and 100,000 square feet.',
+            yearBuilt: `Enter a year from 1800 to ${this.currentYear}, or leave it blank.`,
+            lotSize: 'Enter a lot size from 0 to 1,000 acres, or leave it blank.'
+        };
+        return messages[field.id] || 'Check the highlighted property details.';
     }
 
     async analyzeProperty() {
@@ -247,13 +258,12 @@ class RealEstateAnalyzer {
         const propertyData = this.extractFormData(formData);
         
         try {
-            // Fetch real Property24 data if API is available
-            const property24Data = await this.fetchProperty24Data(propertyData.location);
+            const marketListings = await this.fetchMarketListings(propertyData.location);
             
             // Calculate price with enhanced data
-            const analysis = await this.calculatePriceWithAPI(propertyData, property24Data);
+            const analysis = await this.calculatePriceWithMarketData(propertyData, marketListings);
             
-            // Get real comparables from Property24
+            // Fetch demonstration comparables for the selected property.
             const comparables = await this.getPropertyComparables(
                 propertyData.location, 
                 propertyData.bedrooms, 
@@ -289,18 +299,18 @@ class RealEstateAnalyzer {
         return data;
     }
 
-    async calculatePriceWithAPI(propertyData, property24Data) {
+    async calculatePriceWithMarketData(propertyData, marketListings) {
         const location = propertyData.location;
         const marketData = this.marketData[location] || this.marketData['Sandton, Johannesburg'];
         
-        // Enhanced calculation with Property24 data
+        // Blend local sample listings with the location's configured base rate.
         let basePrice = propertyData.sqft * marketData.basePricePerSqft;
         
         // Adjust based on Property24 market data if available
-        if (property24Data && property24Data.length > 0) {
-            const avgPricePerSqft = this.calculateAveragePricePerSqft(property24Data);
+        if (marketListings && marketListings.length > 0) {
+            const avgPricePerSqft = this.calculateAveragePricePerSqft(marketListings);
             if (avgPricePerSqft > 0) {
-                // Blend Property24 data with our market data (70% Property24, 30% our data)
+                // Blend the sample listing rate with the configured market rate.
                 const blendedPricePerSqft = (avgPricePerSqft * 0.7) + (marketData.basePricePerSqft * 0.3);
                 basePrice = propertyData.sqft * blendedPricePerSqft;
             }
@@ -309,10 +319,10 @@ class RealEstateAnalyzer {
         return this.calculatePrice(propertyData, basePrice);
     }
 
-    calculateAveragePricePerSqft(property24Data) {
-        if (!property24Data || property24Data.length === 0) return 0;
+    calculateAveragePricePerSqft(listings) {
+        if (!listings || listings.length === 0) return 0;
         
-        const validProperties = property24Data.filter(prop => 
+        const validProperties = listings.filter(prop =>
             prop.price && prop.size && prop.size > 0
         );
         
@@ -353,14 +363,14 @@ class RealEstateAnalyzer {
         
         // Year built adjustment (newer homes worth more)
         if (propertyData.yearBuilt) {
-            const age = 2024 - propertyData.yearBuilt;
+            const age = this.currentYear - propertyData.yearBuilt;
             const ageMultiplier = Math.max(0.7, 1 - (age * 0.005));
             basePrice *= ageMultiplier;
         }
         
         // Lot size adjustment
         if (propertyData.lotSize) {
-            const lotMultiplier = 1 + (propertyData.lotSize * 0.1);
+            const lotMultiplier = 1 + Math.min(propertyData.lotSize * 0.1, 0.3);
             basePrice *= lotMultiplier;
         }
         
@@ -458,8 +468,8 @@ class RealEstateAnalyzer {
             },
             {
                 factor: 'Property Age',
-                impact: propertyData.yearBuilt ? (2024 - propertyData.yearBuilt < 10 ? '+6%' : (2024 - propertyData.yearBuilt < 20 ? '+3%' : '-2%')) : 'N/A',
-                type: propertyData.yearBuilt ? (2024 - propertyData.yearBuilt < 20 ? 'positive' : 'negative') : 'neutral'
+                impact: propertyData.yearBuilt ? (this.currentYear - propertyData.yearBuilt < 10 ? '+6%' : (this.currentYear - propertyData.yearBuilt < 20 ? '+3%' : '-2%')) : 'N/A',
+                type: propertyData.yearBuilt ? (this.currentYear - propertyData.yearBuilt < 20 ? 'positive' : 'negative') : 'neutral'
             }
         ];
 
@@ -476,7 +486,7 @@ class RealEstateAnalyzer {
     updateComparables(analysis, propertyData) {
         const comparablesList = document.getElementById('comparables');
         
-        // Use Property24 comparables if available, otherwise fallback
+        // Use demonstration comparables if available, otherwise fallback.
         const comparables = analysis.comparables || this.generateFallbackComparables(
             propertyData.location, 
             propertyData.bedrooms, 
@@ -484,15 +494,33 @@ class RealEstateAnalyzer {
             propertyData.sqft
         );
 
-        comparablesList.innerHTML = comparables.map(comp => `
-            <div class="comparable-item">
-                <span class="address">${comp.address}</span>
-                <span class="details">${comp.details}</span>
-                <span class="price">${comp.price}</span>
-                <span class="date">${comp.date}</span>
-                ${comp.url && comp.url !== '#' ? `<a href="${comp.url}" target="_blank" class="view-listing">View Listing</a>` : ''}
-            </div>
-        `).join('');
+        comparablesList.innerHTML = comparables.map(comp => {
+            const listingUrl = this.getSafeListingUrl(comp.url);
+            return `
+                <div class="comparable-item">
+                    <span class="address">${this.escapeHTML(comp.address)}</span>
+                    <span class="details">${this.escapeHTML(comp.details)}</span>
+                    <span class="price">${this.escapeHTML(comp.price)}</span>
+                    <span class="date">${this.escapeHTML(comp.date)}</span>
+                    ${listingUrl ? `<a href="${this.escapeHTML(listingUrl)}" target="_blank" rel="noopener noreferrer" class="view-listing">View Listing</a>` : ''}
+                </div>
+            `;
+        }).join('');
+    }
+
+    escapeHTML(value) {
+        const characters = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+        return String(value ?? '').replace(/[&<>"']/g, character => characters[character]);
+    }
+
+    getSafeListingUrl(value) {
+        if (!value || value === '#') return null;
+        try {
+            const url = new URL(value, window.location.href);
+            return url.protocol === 'https:' ? url.href : null;
+        } catch {
+            return null;
+        }
     }
 
     generateAddress(location) {
@@ -728,14 +756,16 @@ class RealEstateAnalyzer {
 
     hideLoading() {
         this.analyzeBtn.innerHTML = '<i class="fas fa-search"></i> Analyze Property';
-        this.analyzeBtn.disabled = false;
+        this.validateForm(false);
     }
 }
 
 // Global function to reset form
 function resetForm() {
-    document.getElementById('propertyForm').reset();
+    const form = document.getElementById('propertyForm');
+    form.reset();
     document.getElementById('resultsSection').style.display = 'none';
+    document.getElementById('formFeedback').textContent = '';
     
     // Reset form validation styling
     const inputs = document.querySelectorAll('.form-group input, .form-group select');

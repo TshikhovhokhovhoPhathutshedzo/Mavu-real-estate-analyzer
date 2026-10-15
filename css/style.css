@@ -137,6 +137,7 @@ body {
 }
 
 .checkbox-label {
+    position: relative;
     display: flex;
     align-items: center;
     gap: 10px;
@@ -151,7 +152,18 @@ body {
 }
 
 .checkbox-label input[type="checkbox"] {
-    display: none;
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    clip-path: inset(50%);
+}
+
+.checkbox-label:focus-within .checkmark {
+    outline: 3px solid rgba(102, 126, 234, 0.35);
+    outline-offset: 2px;
 }
 
 .checkmark {
@@ -204,6 +216,19 @@ body {
 
 .analyze-btn:active {
     transform: translateY(0);
+}
+
+.analyze-btn:disabled {
+    cursor: not-allowed;
+    transform: none;
+    box-shadow: none;
+}
+
+.form-feedback {
+    min-height: 1.5rem;
+    margin-top: 12px;
+    color: #b42318;
+    font-size: 0.9rem;
 }
 
 /* Results Section */
@@ -926,6 +951,11 @@ body {
 .api-status.loading {
     background: #ffc107;
     color: #333;
+}
+
+.api-status.demo {
+    background: #164e63;
+    color: white;
 }
 
 /* Enhanced comparable items */

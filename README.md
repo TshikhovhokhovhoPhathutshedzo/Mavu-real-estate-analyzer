@@ -5,8 +5,8 @@ A sophisticated web-based application that provides data-driven property price e
 ## 🏠 Features
 
 ### Core Functionality
-- **Property Analysis**: Input property details and receive accurate price estimates
-- **Market Data Integration**: Real-time market trends and comparable sales
+- **Property Analysis**: Input property details and receive an illustrative price range
+- **Simulated Market Data**: Explore local sample assumptions and example comparables; no live Property24 connection is configured
 - **Amenity Impact Analysis**: Understand how features affect property value
 - **Confidence Scoring**: Transparent confidence levels for each estimate
 - **Value Enhancement Tips**: Suggestions to increase property value
@@ -38,7 +38,7 @@ A sophisticated web-based application that provides data-driven property price e
 ### Usage
 1. **Enter Property Details**: Fill in the required fields with property information
 2. **Select Amenities**: Check the boxes for available amenities
-3. **Analyze**: Click "Analyze Property" to generate estimates
+3. **Analyze**: Click "Analyze Property" to generate a demonstration estimate
 4. **Review Results**: Examine the detailed analysis and recommendations
 5. **Reset**: Use "Analyze Another Property" to start a new analysis
 
@@ -54,8 +54,8 @@ The system uses a sophisticated multi-factor analysis:
 5. **Property Age**: Newer homes typically command higher prices
 6. **Lot Size**: Larger lots increase property value
 
-### Market Data
-Currently supports major South African markets:
+### Demonstration Market Assumptions
+The local sample data covers these South African markets:
 - Sandton, Johannesburg
 - Cape Town, Western Cape
 - Durban, KwaZulu-Natal
@@ -101,8 +101,9 @@ Confidence levels are calculated based on:
 - Use as a starting point for property research
 
 ### Data Sources
-- Market data is simulated for demonstration purposes
-- In a production environment, integrate with real estate APIs
+- Market data, comparable properties, images, and map visuals are simulated or illustrative demonstration content, not verified listings or live market data
+- No live real-estate API is currently configured
+- A production integration would require an authorized API and a server-side proxy; never expose API credentials in browser code
 - Consider Zillow, Redfin, or MLS data for accurate market information
 
 ## 🔧 Technical Details

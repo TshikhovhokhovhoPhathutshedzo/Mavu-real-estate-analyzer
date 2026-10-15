@@ -4,15 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MAVU Estate Analyzer</title>
-    <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="css/style.css?v=2">
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <!-- Property24 API Integration - Using mock data approach -->
+    <!-- Simulated market data for the local demonstration. -->
     <script>
-        // Mock Property24 API for frontend integration
-        window.Property24API = {
+        // Local demonstration data only; this is not a live Property24 API.
+        window.DemoMarketData = {
             searchProperties: async function(params) {
-                // Mock Property24 data for South African properties
+                // Sample South African properties for the demo UI.
                 const mockProperties = [
                     {
                         id: 1,
@@ -23,8 +23,7 @@
                         size: params.minPrice ? Math.round(params.minPrice / 4500) : 1500,
                         price: params.minPrice || 6750000,
                         images: ["https://images.unsplash.com/photo-1564013799919-ab600027ffc6?w=400&h=300&fit=crop"],
-                        dateListed: "2024-01-15",
-                        url: "https://www.property24.com/listing/123"
+                        dateListed: "Demo listing"
                     },
                     {
                         id: 2,
@@ -35,8 +34,7 @@
                         size: params.minPrice ? Math.round(params.minPrice / 4000) : 1800,
                         price: params.maxPrice || 8500000,
                         images: ["https://images.unsplash.com/photo-1512917774080-9991f1c4c750?w=400&h=300&fit=crop"],
-                        dateListed: "2024-01-10",
-                        url: "https://www.property24.com/listing/456"
+                        dateListed: "Demo listing"
                     },
                     {
                         id: 3,
@@ -47,8 +45,7 @@
                         size: params.minPrice ? Math.round(params.minPrice / 4200) : 1600,
                         price: Math.round((params.minPrice + params.maxPrice) / 2) || 7500000,
                         images: ["https://images.unsplash.com/photo-1586023492125-27b2c045efd7?w=400&h=300&fit=crop"],
-                        dateListed: "2024-01-20",
-                        url: "https://www.property24.com/listing/789"
+                        dateListed: "Demo listing"
                     }
                 ];
                 
@@ -81,7 +78,7 @@
                 <h1>MAVU Estate Analyzer</h1>
             </div>
             <p class="subtitle">Data-driven property price predictions in South African Rands</p>
-            <div id="apiStatus" class="api-status loading">Connecting to Property24...</div>
+            <div id="apiStatus" class="api-status demo" role="status">Demo data only</div>
         </header>
 
         <main class="main-content">
@@ -130,17 +127,17 @@
 
                         <div class="form-group">
                             <label for="sqft">Square Footage</label>
-                            <input type="number" id="sqft" name="sqft" placeholder="e.g., 1800" required>
+                            <input type="number" id="sqft" name="sqft" placeholder="e.g., 1800" min="1" max="100000" step="1" required>
                         </div>
 
                         <div class="form-group">
                             <label for="yearBuilt">Year Built</label>
-                            <input type="number" id="yearBuilt" name="yearBuilt" placeholder="e.g., 2010" min="1900" max="2024">
+                            <input type="number" id="yearBuilt" name="yearBuilt" placeholder="e.g., 2010" min="1800" step="1">
                         </div>
 
                         <div class="form-group">
                             <label for="lotSize">Lot Size (acres)</label>
-                            <input type="number" id="lotSize" name="lotSize" placeholder="e.g., 0.25" step="0.01" min="0">
+                            <input type="number" id="lotSize" name="lotSize" placeholder="e.g., 0.25" step="0.01" min="0" max="1000">
                         </div>
                     </div>
 
@@ -184,6 +181,7 @@
                         <i class="fas fa-search"></i>
                         Analyze Property
                     </button>
+                    <p id="formFeedback" class="form-feedback" role="status" aria-live="polite"></p>
                 </form>
             </div>
 
@@ -279,6 +277,7 @@
                 <div class="disclaimer">
                     <h3><i class="fas fa-exclamation-triangle"></i> Important Disclaimers</h3>
                     <ul>
+                        <li>Market figures and comparable listings shown here are simulated demonstration data, not live Property24 results</li>
                         <li>This estimate is based on historical data and market trends, not real-time pricing</li>
                         <li>Actual prices may vary significantly due to market fluctuations, property condition, and negotiation</li>
                         <li>We recommend consulting with a licensed real estate professional for precise valuations</li>
@@ -294,10 +293,10 @@
         </main>
 
         <footer class="footer">
-            <p>&copy; 2024 MAVU Estate Analyzer. Contact us today for a better quote.</p>
+            <p>&copy; <span id="currentYear"></span> MAVU Estate Analyzer. Estimates are for information only.</p>
         </footer>
     </div>
 
-    <script src="js/analyzer.js"></script>
+    <script src="js/analyzer.js?v=2"></script>
 </body>
 </html> 
